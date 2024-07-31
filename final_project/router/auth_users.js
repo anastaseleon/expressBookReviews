@@ -64,19 +64,46 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
   const username = req.session.authorization.username;
   const { review } = req.body;
   const { isbn } = req.params;
-  const book_reviewed= books.filter((book) => book.isbn === isbn)
-  if (!book_reviewed) {
+
+  // Find the book by ISBN
+  const book = books.find(book => book.isbn === isbn);
+
+  if (!book) {
     return res.status(404).json({ message: "Book not found" });
   }
 
-  if (!book_reviewed.reviews) {
-    book_reviewed.reviews = [];
+  if (!book.reviews) {
+    book.reviews = [];
   }
 
-  book_reviewed.reviews.push({ username, review });
+  book.reviews.push({ username, review });
 
   return res.status(200).json({ message: "Review was added" });
 });
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+  // Route to delete a review
+  const isbn = req.params.isbn;
+  const username = req.session.authorization.username;
+
+  const book = books.find(book => book.isbn === isbn);
+
+  if (!book) {
+    return res.status(404).json({ error: "Book not found" });
+  }
+
+  const reviewIndex = book.reviews.findIndex(review => review.username === username);
+
+  if (reviewIndex === -1) {
+    return res.status(404).json({ error: `Review not found for user ${username} and book ${book.title}` });
+  }
+
+  book.reviews.splice(reviewIndex, 1);
+  res.status(200).json({ message: "Review deleted successfully" });
+});
+
+
+
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;

@@ -25,48 +25,75 @@ public_users.post("/register", (req, res) => {
   return res.status(201).send({ message: 'User registered successfully' });
 });
 
-// Get the book list available in the shop
-public_users.get('/', function (req, res) {
-  res.status(200).send(JSON.stringify(booksArray));
-});
 
-// Get book details based on ISBN
-public_users.get('/isbn/:isbn', function (req, res) {
-  const isbn = req.params.isbn;
-  
-  // Filter the books array to find the book with the matching ISBN
-  const filtered_books = booksArray.filter((book) => book.isbn === isbn);
-  
-  if (filtered_books.length > 0) {
-    // Send the filtered_books array as the response to the client
-    res.status(200).send(filtered_books);
-  } else {
-    res.status(404).send({ message: 'Book not found' });
+// Get the book list available in the shop using async/await
+public_users.get('/', async (req, res) => {
+  try {
+    res.status(200).json(booksArray);
+  } catch (err) {
+    res.status(500).send({ message: 'Internal Server Error' });
   }
 });
+
+
+// Get book details based on ISBN
+public_users.get('/isbn/:isbn', (req, res) => {
+  const isbn = req.params.isbn;
+
+  return new Promise((resolve, reject) => {
+    const filtered_books = booksArray.filter((book) => book.isbn === isbn);
+    if (filtered_books.length > 0) {
+      resolve(filtered_books);
+    } else {
+      reject({ status: 404, message: 'Book not found' });
+    }
+  })
+  .then((filtered_books) => {
+    res.status(200).send(filtered_books);
+  })
+  .catch((err) => {
+    res.status(err.status).send({ message: err.message });
+  });
+});
+
+
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
 const author= req.params.author
-const filtered_books_author = booksArray.filter((book) => book.author === author)
-if (filtered_books_author.length > 0) {
-  // Send the filtered_books array as the response to the client
-  res.status(200).send(filtered_books_author);
-} else {
-  res.status(404).send({ message: 'Book not found' });
-}
+return new Promise((resolve, reject) => {
+  const filtered_books = booksArray.filter((book) => book.author === author);
+  if (filtered_books.length > 0) {
+    resolve(filtered_books);
+  } else {
+    reject({ status: 404, message: 'Book not found' });
+  }
+})
+.then((filtered_books) => {
+  res.status(200).send(filtered_books);
+})
+.catch((err) => {
+  res.status(err.status).send({ message: err.message });
+});
 });
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
  
     const title= req.params.title
-    const filtered_books_title = booksArray.filter((book) => book.title === title)
-    if (filtered_books_title.length > 0) {
-      // Send the filtered_books array as the response to the client
-      res.status(200).send(filtered_books_title);
-    } else {
-      res.status(404).send({ message: 'Book not found' });
-    }
+        return new Promise((resolve, reject) => {
+      const filtered_books = booksArray.filter((book) => book.title === title);
+      if (filtered_books.length > 0) {
+        resolve(filtered_books);
+      } else {
+        reject({ status: 404, message: 'Book not found' });
+      }
+    })
+    .then((filtered_books) => {
+      res.status(200).send(filtered_books);
+    })
+    .catch((err) => {
+      res.status(err.status).send({ message: err.message });
+    });
     });
 
 //  Get book review
