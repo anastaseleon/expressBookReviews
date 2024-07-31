@@ -6,24 +6,24 @@ const public_users = express.Router();
 
 
 public_users.post("/register", (req, res) => {
-  // Check if username and password are provided
-  if (req.body.username && req.body.password) {
-        // Create or update user's details based on provided username
-    if(users[req.body.username]) {
-      res.status(400).send({message: "User already exists"});
-    } else{
-    users[req.body.username] = {
-      "password": req.body.password
-    };
+  const { username, password } = req.body;
 
-    // Send a response indicating successful registration
-    res.status(200).send({ message: 'User registered successfully' });
+  // Check if username and password are provided
+  if (!username || !password) {
+    return res.status(400).send({ message: 'Username and password are required' });
   }
- } else {
-    // Send an error response if username or password is not provided
-    res.status(400).send({ message: 'Username and password are required' });
- }
-  });
+
+  // Check if user already exists
+  if (users.some(user => user.username === username)) {
+    return res.status(400).send({ message: "User already exists" });
+  }
+
+  // Register new user
+  users.push({ username, password });
+
+  // Send a response indicating successful registration
+  return res.status(201).send({ message: 'User registered successfully' });
+});
 
 // Get the book list available in the shop
 public_users.get('/', function (req, res) {
